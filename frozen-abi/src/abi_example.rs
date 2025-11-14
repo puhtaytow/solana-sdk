@@ -561,69 +561,69 @@ impl<T: Serialize + AbiExample> AbiEnumVisitor for T {
     }
 }
 
-// even (experimental) rust specialization isn't enough for us, resort to
-// the autoref hack: https://github.com/dtolnay/case-studies/blob/master/autoref-specialization/README.md
-// relevant test: TestVecEnum
-impl<T: Serialize + ?Sized + AbiEnumVisitor> AbiEnumVisitor for &T {
-    default fn visit_for_abi(&self, digester: &mut AbiDigester) -> DigestResult {
-        println!("AbiEnumVisitor for &T: {}", type_name::<T>());
-        // Don't call self.visit_for_abi(...) to avoid the infinite recursion!
-        T::visit_for_abi(self, digester)
-    }
-}
+// // even (experimental) rust specialization isn't enough for us, resort to
+// // the autoref hack: https://github.com/dtolnay/case-studies/blob/master/autoref-specialization/README.md
+// // relevant test: TestVecEnum
+// impl<T: Serialize + ?Sized + AbiEnumVisitor> AbiEnumVisitor for &T {
+//     default fn visit_for_abi(&self, digester: &mut AbiDigester) -> DigestResult {
+//         println!("AbiEnumVisitor for &T: {}", type_name::<T>());
+//         // Don't call self.visit_for_abi(...) to avoid the infinite recursion!
+//         T::visit_for_abi(self, digester)
+//     }
+// }
 
-// force to call self.serialize instead of T::visit_for_abi() for serialization
-// helper structs like ad-hoc iterator `struct`s
-impl<T: Serialize + TransparentAsHelper> AbiEnumVisitor for &T {
-    default fn visit_for_abi(&self, digester: &mut AbiDigester) -> DigestResult {
-        println!(
-            "AbiEnumVisitor for (TransparentAsHelper): {}",
-            type_name::<T>()
-        );
-        self.serialize(digester.create_new())
-            .map_err(DigestError::wrap_by_type::<T>)
-    }
-}
+// // force to call self.serialize instead of T::visit_for_abi() for serialization
+// // helper structs like ad-hoc iterator `struct`s
+// impl<T: Serialize + TransparentAsHelper> AbiEnumVisitor for &T {
+//     default fn visit_for_abi(&self, digester: &mut AbiDigester) -> DigestResult {
+//         println!(
+//             "AbiEnumVisitor for (TransparentAsHelper): {}",
+//             type_name::<T>()
+//         );
+//         self.serialize(digester.create_new())
+//             .map_err(DigestError::wrap_by_type::<T>)
+//     }
+// }
 
-// force to call self.serialize instead of T::visit_for_abi() to work around the
-// inability of implementing AbiExample for private structs from other crates
-impl<T: Serialize + TransparentAsHelper + EvenAsOpaque> AbiEnumVisitor for &T {
-    default fn visit_for_abi(&self, digester: &mut AbiDigester) -> DigestResult {
-        let type_name = type_name::<T>();
-        let matcher = T::TYPE_NAME_MATCHER;
-        println!("AbiEnumVisitor for (EvenAsOpaque): {type_name}: matcher: {matcher}");
-        self.serialize(digester.create_new_opaque(matcher))
-            .map_err(DigestError::wrap_by_type::<T>)
-    }
-}
+// // force to call self.serialize instead of T::visit_for_abi() to work around the
+// // inability of implementing AbiExample for private structs from other crates
+// impl<T: Serialize + TransparentAsHelper + EvenAsOpaque> AbiEnumVisitor for &T {
+//     default fn visit_for_abi(&self, digester: &mut AbiDigester) -> DigestResult {
+//         let type_name = type_name::<T>();
+//         let matcher = T::TYPE_NAME_MATCHER;
+//         println!("AbiEnumVisitor for (EvenAsOpaque): {type_name}: matcher: {matcher}");
+//         self.serialize(digester.create_new_opaque(matcher))
+//             .map_err(DigestError::wrap_by_type::<T>)
+//     }
+// }
 
-// Because Option and Result enums are so common enums, provide generic trait implementations
-// The digesting pattern must match with what is derived from #[derive(AbiEnumVisitor)]
-impl<T: AbiEnumVisitor> AbiEnumVisitor for Option<T> {
-    fn visit_for_abi(&self, digester: &mut AbiDigester) -> DigestResult {
-        println!("AbiEnumVisitor for (Option<T>): {}", type_name::<Self>());
+// // Because Option and Result enums are so common enums, provide generic trait implementations
+// // The digesting pattern must match with what is derived from #[derive(AbiEnumVisitor)]
+// impl<T: AbiEnumVisitor> AbiEnumVisitor for Option<T> {
+//     fn visit_for_abi(&self, digester: &mut AbiDigester) -> DigestResult {
+//         println!("AbiEnumVisitor for (Option<T>): {}", type_name::<Self>());
 
-        let variant: Self = Option::Some(T::example());
-        // serde calls serialize_some(); not serialize_variant();
-        // so create_new is correct, not create_enum_child or create_enum_new
-        variant.serialize(digester.create_new())
-    }
-}
+//         let variant: Self = Option::Some(T::example());
+//         // serde calls serialize_some(); not serialize_variant();
+//         // so create_new is correct, not create_enum_child or create_enum_new
+//         variant.serialize(digester.create_new())
+//     }
+// }
 
-impl<O: AbiEnumVisitor, E: AbiEnumVisitor> AbiEnumVisitor for Result<O, E> {
-    fn visit_for_abi(&self, digester: &mut AbiDigester) -> DigestResult {
-        println!("AbiEnumVisitor for (Result<O, E>): {}", type_name::<Self>());
+// impl<O: AbiEnumVisitor, E: AbiEnumVisitor> AbiEnumVisitor for Result<O, E> {
+//     fn visit_for_abi(&self, digester: &mut AbiDigester) -> DigestResult {
+//         println!("AbiEnumVisitor for (Result<O, E>): {}", type_name::<Self>());
 
-        digester.update(&["enum Result (variants = 2)"]);
-        let variant: Self = Result::Ok(O::example());
-        variant.serialize(digester.create_enum_child()?)?;
+//         digester.update(&["enum Result (variants = 2)"]);
+//         let variant: Self = Result::Ok(O::example());
+//         variant.serialize(digester.create_enum_child()?)?;
 
-        let variant: Self = Result::Err(E::example());
-        variant.serialize(digester.create_enum_child()?)?;
+//         let variant: Self = Result::Err(E::example());
+//         variant.serialize(digester.create_enum_child()?)?;
 
-        digester.create_child()
-    }
-}
+//         digester.create_child()
+//     }
+// }
 
 #[cfg(not(target_os = "solana"))]
 impl<T: AbiExample> AbiExample for std::sync::OnceLock<T> {

@@ -6,10 +6,9 @@ use solana_frozen_abi_macro::AbiExample;
 
 #[cfg_attr(
     feature = "frozen-abi",
-    // derive(AbiExample),
-    // derive(AbiEnumVisitor),
+    derive(AbiExample),
     frozen_abi(
-        api_digest = "fFcqrZWZX4WcorTUxfMCVWeh2QcwamXKdLTzsDj58Kn",
+        api_digest = "H4pHPLGaqzQVAnMDKCgHD3R5sqWNxZwpCuZpmukAQSa",
         abi_digest = "5RoDSUMyqu38JmXiZBKXzAGRuku7JfHtKamyGqnYN7ND"
     )
 )]
