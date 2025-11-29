@@ -3,7 +3,7 @@
 #![cfg_attr(feature = "frozen-abi", feature(min_specialization))]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #[cfg(feature = "frozen-abi")]
-use solana_frozen_abi_macro::{frozen_abi, AbiExample};
+use solana_frozen_abi_macro::{frozen_abi, AbiExample, StableAbi};
 #[cfg(feature = "serde")]
 use {
     bincode::{deserialize, serialize},
@@ -48,8 +48,11 @@ pub const UNUSED_DEFAULT: u64 = 1024;
 
 #[cfg_attr(
     feature = "frozen-abi",
-    derive(AbiExample),
-    frozen_abi(digest = "3tUUJkZiUUGfuNCXbDuDR6KCQYPsh3m3cPw5vVUSt113")
+    derive(AbiExample, StableAbi),
+    frozen_abi(
+        // api_digest = "3tUUJkZiUUGfuNCXbDuDR6KCQYPsh3m3cPw5vVUSt113",
+        abi_digest = "3tUUJkZiUUGfuNCXbDuDR6KCQYPsh3m3cPw5vVUSt113a"
+    )
 )]
 #[cfg_attr(
     feature = "serde",
@@ -82,6 +85,17 @@ pub struct GenesisConfig {
     pub epoch_schedule: EpochSchedule,
     /// network runlevel
     pub cluster_type: ClusterType,
+}
+
+#[cfg(feature = "frozen-abi")]
+impl solana_frozen_abi::rand::prelude::Distribution<GenesisConfig>
+    for solana_frozen_abi::rand::distributions::Standard
+{
+    fn sample<R: solana_frozen_abi::rand::Rng + ?Sized>(&self, rng: &mut R) -> GenesisConfig {
+        let mut config = GenesisConfig::default();
+        config.creation_time = rng.r#gen(); // TODO: should not default
+        config
+    }
 }
 
 // useful for basic tests
