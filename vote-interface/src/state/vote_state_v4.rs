@@ -22,7 +22,7 @@ use {
     feature = "frozen-abi",
     frozen_abi(
         api_digest = "2H9WgTh7LgdnpinvEwxzP3HF6SDuKp6qdwFmJk9jHDRP",
-        abi_digest = "4g7TRPnQxr9X61b5LHDB29LVL89EDQnZyFXbKivMccFQ"
+        abi_digest = "CFpc8LMQhpYBsNctM4n9o6rn6BQJ4mcTx6pveGtb7YcM"
     ),
     derive(AbiExample, StableAbi)
 )]
@@ -75,39 +75,39 @@ pub struct VoteStateV4 {
 
 #[cfg(feature = "frozen-abi")]
 impl solana_frozen_abi::rand::prelude::Distribution<VoteStateV4>
-    for solana_frozen_abi::rand::distributions::Standard
+    for solana_frozen_abi::rand::distr::StandardUniform
 {
     fn sample<R: solana_frozen_abi::rand::Rng + ?Sized>(&self, rng: &mut R) -> VoteStateV4 {
-        let bls_pubkey_compressed = Some(std::array::from_fn(|_| rng.gen()));
-        let votes: VecDeque<_> = (0..rng.gen_range(0..1000))
+        let bls_pubkey_compressed = Some(std::array::from_fn(|_| rng.random()));
+        let votes: VecDeque<_> = (0..rng.random_range(0..1000))
             .map(|_| LandedVote {
-                latency: rng.gen(),
-                lockout: crate::state::Lockout::new(rng.gen()),
+                latency: rng.random(),
+                lockout: crate::state::Lockout::new(rng.random()),
             })
             .collect();
-        let epoch_credits: Vec<_> = (0..rng.gen_range(0..1000))
-            .map(|_| (rng.gen(), rng.gen(), rng.gen()))
+        let epoch_credits: Vec<_> = (0..rng.random_range(0..1000))
+            .map(|_| (rng.random(), rng.random(), rng.random()))
             .collect();
 
         VoteStateV4 {
-            node_pubkey: Pubkey::new_from_array(rng.r#gen()),
-            authorized_withdrawer: Pubkey::new_from_array(rng.r#gen()),
-            inflation_rewards_collector: Pubkey::new_from_array(rng.r#gen()),
-            block_revenue_collector: Pubkey::new_from_array(rng.r#gen()),
-            inflation_rewards_commission_bps: rng.r#gen(),
-            block_revenue_commission_bps: rng.r#gen(),
-            pending_delegator_rewards: rng.r#gen(),
+            node_pubkey: Pubkey::new_from_array(rng.random()),
+            authorized_withdrawer: Pubkey::new_from_array(rng.random()),
+            inflation_rewards_collector: Pubkey::new_from_array(rng.random()),
+            block_revenue_collector: Pubkey::new_from_array(rng.random()),
+            inflation_rewards_commission_bps: rng.random(),
+            block_revenue_commission_bps: rng.random(),
+            pending_delegator_rewards: rng.random(),
             bls_pubkey_compressed,
             votes,
-            root_slot: Some(rng.r#gen()),
+            root_slot: Some(rng.random()),
             authorized_voters: AuthorizedVoters::new(
-                rng.r#gen(),
-                Pubkey::new_from_array(rng.r#gen()),
+                rng.random(),
+                Pubkey::new_from_array(rng.random()),
             ),
             epoch_credits,
             last_timestamp: BlockTimestamp {
-                slot: rng.r#gen(),
-                timestamp: rng.r#gen(),
+                slot: rng.random(),
+                timestamp: rng.random(),
             },
         }
     }

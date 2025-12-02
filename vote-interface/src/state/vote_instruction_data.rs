@@ -20,7 +20,7 @@ use {
     feature = "frozen-abi",
     frozen_abi(
         api_digest = "GvUzgtcxhKVVxPAjSntXGPqjLZK5ovgZzCiUP1tDpB9q",
-        abi_digest = "BbtfeZFE7Fesk4LdkMAu2NCp4DpMLTAmAd31mcuewGJn"
+        abi_digest = "2xEB2gzHSousWedFa7H6LYEK1m5GYzWYf95WYnogxKkS"
     ),
     derive(AbiExample, StableAbi)
 )]
@@ -37,17 +37,17 @@ pub struct Vote {
 
 #[cfg(feature = "frozen-abi")]
 impl solana_frozen_abi::rand::prelude::Distribution<Vote>
-    for solana_frozen_abi::rand::distributions::Standard
+    for solana_frozen_abi::rand::distr::StandardUniform
 {
     fn sample<R: solana_frozen_abi::rand::Rng + ?Sized>(&self, rng: &mut R) -> Vote {
-        let slots: Vec<Slot> = (0..rng.r#gen_range(0..1000))
-            .map(|_| rng.r#gen::<u64>().into())
+        let slots: Vec<Slot> = (0..rng.random_range(0..1000))
+            .map(|_| rng.random::<u64>().into())
             .collect();
 
         Vote {
             slots,
-            hash: Hash::new_from_array(rng.r#gen()),
-            timestamp: Some(rng.r#gen()),
+            hash: Hash::new_from_array(rng.random()),
+            timestamp: Some(rng.random()),
         }
     }
 }
@@ -70,7 +70,7 @@ impl Vote {
     feature = "frozen-abi",
     frozen_abi(
         api_digest = "CxyuwbaEdzP7jDCZyxjgQvLGXadBUZF3LoUvbSpQ6tYN",
-        abi_digest = "7zwscqJMVfyoS4cJdcZa4fuCgwKYM3GUZhvQsFfpKm7e"
+        abi_digest = "7oYbjCjdk8eVvp3wej7s3kPKSRUwRhmC9qWPRsW2RNtM"
     ),
     derive(AbiExample, StableAbi)
 )]
@@ -89,17 +89,17 @@ pub struct VoteStateUpdate {
 
 #[cfg(feature = "frozen-abi")]
 impl solana_frozen_abi::rand::prelude::Distribution<VoteStateUpdate>
-    for solana_frozen_abi::rand::distributions::Standard
+    for solana_frozen_abi::rand::distr::StandardUniform
 {
     fn sample<R: solana_frozen_abi::rand::Rng + ?Sized>(&self, rng: &mut R) -> VoteStateUpdate {
-        let lockouts: VecDeque<_> = (0..rng.r#gen_range(0..1000))
-            .map(|_| Lockout::new(rng.r#gen()))
+        let lockouts: VecDeque<_> = (0..rng.random_range(0..1000))
+            .map(|_| Lockout::new(rng.random()))
             .collect();
         VoteStateUpdate {
             lockouts,
-            root: Some(rng.r#gen::<u64>().into()),
-            hash: Hash::new_from_array(rng.r#gen()),
-            timestamp: Some(rng.r#gen()),
+            root: Some(rng.random::<u64>().into()),
+            hash: Hash::new_from_array(rng.random()),
+            timestamp: Some(rng.random()),
         }
     }
 }
@@ -144,7 +144,7 @@ impl VoteStateUpdate {
     feature = "frozen-abi",
     frozen_abi(
         api_digest = "6UDiQMH4wbNwkMHosPMtekMYu2Qa6CHPZ2ymK4mc6FGu",
-        abi_digest = "H4XQ8ftqobHG3jNoCnVgJN4wRJJq1wnUQy8vGK3mp9PX"
+        abi_digest = "5WwSB17ze8us9dwhJWXGR7yzaXseHHWFkpT5TCuBgca3"
     ),
     derive(AbiExample, StableAbi)
 )]
@@ -167,18 +167,18 @@ pub struct TowerSync {
 
 #[cfg(feature = "frozen-abi")]
 impl solana_frozen_abi::rand::prelude::Distribution<TowerSync>
-    for solana_frozen_abi::rand::distributions::Standard
+    for solana_frozen_abi::rand::distr::StandardUniform
 {
     fn sample<R: solana_frozen_abi::rand::Rng + ?Sized>(&self, rng: &mut R) -> TowerSync {
-        let lockouts: VecDeque<_> = (0..rng.r#gen_range(0..1000))
-            .map(|_| Lockout::new(rng.r#gen()))
+        let lockouts: VecDeque<_> = (0..rng.random_range(0..1000))
+            .map(|_| Lockout::new(rng.random()))
             .collect();
         TowerSync {
             lockouts,
-            root: Some(rng.r#gen()),
-            hash: Hash::new_from_array(rng.r#gen()),
-            timestamp: Some(rng.r#gen()),
-            block_id: Hash::new_from_array(rng.r#gen()),
+            root: Some(rng.random()),
+            hash: Hash::new_from_array(rng.random()),
+            timestamp: Some(rng.random()),
+            block_id: Hash::new_from_array(rng.random()),
         }
     }
 }

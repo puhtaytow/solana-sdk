@@ -12,7 +12,7 @@ const DEFAULT_PRIOR_VOTERS_OFFSET: usize = 82;
     feature = "frozen-abi",
     frozen_abi(
         api_digest = "2rjXSWaNeAdoUNJDC5otC7NPR1qXHvLMuAs5faE4DPEt",
-        abi_digest = "DEmsGurYNiQfW2bkPBuxEKoMfxbPgkGejpBiNj8HywAS"
+        abi_digest = "GQvUnzypqWVwtedNSVWrhtr3Uy4vUor4mbvzsoUEV79R"
     ),
     derive(AbiExample, StableAbi)
 )]
@@ -53,36 +53,40 @@ pub struct VoteState1_14_11 {
 
 #[cfg(feature = "frozen-abi")]
 impl solana_frozen_abi::rand::prelude::Distribution<VoteState1_14_11>
-    for solana_frozen_abi::rand::distributions::Standard
+    for solana_frozen_abi::rand::distr::StandardUniform
 {
     fn sample<R: solana_frozen_abi::rand::Rng + ?Sized>(&self, rng: &mut R) -> VoteState1_14_11 {
-        let votes: VecDeque<_> = (0..rng.gen_range(0..1000))
-            .map(|_| Lockout::new(rng.gen()))
+        let votes: VecDeque<_> = (0..rng.random_range(0..1000))
+            .map(|_| Lockout::new(rng.random()))
             .collect();
 
         let mut prior_voters: CircBuf<(Pubkey, Epoch, Epoch)> = CircBuf::default();
-        for _ in 0..rng.gen_range(0..1000) {
-            prior_voters.append((Pubkey::new_from_array(rng.gen()), rng.gen(), rng.gen()));
+        for _ in 0..rng.random_range(0..1000) {
+            prior_voters.append((
+                Pubkey::new_from_array(rng.random()),
+                rng.random(),
+                rng.random(),
+            ));
         }
-        let epoch_credits: Vec<_> = (0..rng.gen_range(0..1000))
-            .map(|_| (rng.gen(), rng.gen(), rng.gen()))
+        let epoch_credits: Vec<_> = (0..rng.random_range(0..1000))
+            .map(|_| (rng.random(), rng.random(), rng.random()))
             .collect();
 
         VoteState1_14_11 {
-            node_pubkey: Pubkey::new_from_array(rng.r#gen()),
-            authorized_withdrawer: Pubkey::new_from_array(rng.r#gen()),
-            commission: rng.r#gen(),
+            node_pubkey: Pubkey::new_from_array(rng.random()),
+            authorized_withdrawer: Pubkey::new_from_array(rng.random()),
+            commission: rng.random(),
             votes,
-            root_slot: Some(rng.r#gen()),
+            root_slot: Some(rng.random()),
             authorized_voters: AuthorizedVoters::new(
-                rng.r#gen(),
-                Pubkey::new_from_array(rng.r#gen()),
+                rng.random(),
+                Pubkey::new_from_array(rng.random()),
             ),
             prior_voters,
             epoch_credits,
             last_timestamp: BlockTimestamp {
-                slot: rng.r#gen(),
-                timestamp: rng.r#gen(),
+                slot: rng.random(),
+                timestamp: rng.random(),
             },
         }
     }
