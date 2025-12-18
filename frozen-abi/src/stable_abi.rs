@@ -8,7 +8,7 @@ pub trait StableAbi: Sized {
     where
         Self: for<'a> Arbitrary<'a>,
     {
-        let mut buffer = vec![0u8; 65536];
+        let mut buffer = vec![0u8; 1024];
         rng.fill_bytes(&mut buffer);
 
         let mut unstructured = Unstructured::new(&buffer);

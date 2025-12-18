@@ -7,7 +7,7 @@ use arbitrary::Arbitrary;
 #[cfg(feature = "serde")]
 use serde_derive::{Deserialize, Serialize};
 #[cfg(feature = "frozen-abi")]
-use solana_frozen_abi_macro::{frozen_abi, AbiExample};
+use solana_frozen_abi_macro::{frozen_abi, AbiExample, StableAbi};
 #[cfg(any(target_os = "solana", feature = "bincode"))]
 use solana_instruction_error::InstructionError;
 use {
@@ -21,12 +21,18 @@ use {
 
 #[cfg_attr(
     feature = "frozen-abi",
-    frozen_abi(digest = "pZqasQc6duzMYzpzU7eriHH9cMXmubuUP4NmCrkWZjt"),
-    derive(AbiExample)
+    frozen_abi(
+        api_digest = "pZqasQc6duzMYzpzU7eriHH9cMXmubuUP4NmCrkWZjt",
+        abi_digest = "9rpA1TjHZP5vZxbRUxHijF77WRXhM3xsX1Re5yPkRA3M"
+    ),
+    derive(AbiExample, StableAbi)
 )]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
-#[cfg_attr(feature = "dev-context-only-utils", derive(Arbitrary))]
+#[cfg_attr(
+    any(feature = "frozen-abi", feature = "dev-context-only-utils"),
+    derive(Arbitrary)
+)]
 pub struct VoteStateV3 {
     /// the node that votes in this account
     pub node_pubkey: Pubkey,

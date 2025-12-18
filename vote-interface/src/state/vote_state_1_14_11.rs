@@ -7,12 +7,21 @@ const DEFAULT_PRIOR_VOTERS_OFFSET: usize = 82;
 
 #[cfg_attr(
     feature = "frozen-abi",
-    solana_frozen_abi_macro::frozen_abi(digest = "2rjXSWaNeAdoUNJDC5otC7NPR1qXHvLMuAs5faE4DPEt"),
-    derive(solana_frozen_abi_macro::AbiExample)
+    solana_frozen_abi_macro::frozen_abi(
+        api_digest = "2rjXSWaNeAdoUNJDC5otC7NPR1qXHvLMuAs5faE4DPEt",
+        abi_digest = "9xEdJLVzBU4K6swRAjwLXs8x7zUiDaqQv44YgbgLc8o3"
+    ),
+    derive(
+        solana_frozen_abi_macro::AbiExample,
+        solana_frozen_abi_macro::StableAbi
+    )
 )]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
-#[cfg_attr(feature = "dev-context-only-utils", derive(Arbitrary))]
+#[cfg_attr(
+    any(feature = "frozen-abi", feature = "dev-context-only-utils"),
+    derive(Arbitrary)
+)]
 pub struct VoteState1_14_11 {
     /// the node that votes in this account
     pub node_pubkey: Pubkey,

@@ -76,7 +76,7 @@ mod account_serialize {
     #[cfg_attr(
         feature = "frozen-abi",
         derive(AbiExample),
-        frozen_abi(digest = "62EqVoynUFvuui7DVfqWCvZP7bxKGJGioeSBnWrdjRME")
+        frozen_abi(api_digest = "62EqVoynUFvuui7DVfqWCvZP7bxKGJGioeSBnWrdjRME")
     )]
     #[derive(serde_derive::Serialize)]
     #[serde(rename_all = "camelCase")]
