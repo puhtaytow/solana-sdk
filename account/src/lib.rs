@@ -6,10 +6,13 @@
 use qualifier_attr::qualifiers;
 #[cfg(feature = "serde")]
 use serde::ser::{Serialize, Serializer};
-#[cfg(feature = "frozen-abi")]
-use solana_frozen_abi_macro::{frozen_abi, AbiExample};
 #[cfg(feature = "bincode")]
 use solana_sysvar::SysvarSerialize;
+#[cfg(feature = "frozen-abi")]
+use {
+    arbitrary::Arbitrary,
+    solana_frozen_abi_macro::{frozen_abi, AbiExample, StableAbi},
+};
 use {
     solana_account_info::{debug_account_data::*, AccountInfo},
     solana_clock::{Epoch, INITIAL_RENT_EPOCH},
@@ -32,8 +35,11 @@ pub mod state_traits;
 #[repr(C)]
 #[cfg_attr(
     feature = "frozen-abi",
-    derive(AbiExample),
-    frozen_abi(digest = "62EqVoynUFvuui7DVfqWCvZP7bxKGJGioeSBnWrdjRME")
+    derive(AbiExample, StableAbi, Arbitrary),
+    frozen_abi(
+        api_digest = "62EqVoynUFvuui7DVfqWCvZP7bxKGJGioeSBnWrdjRME",
+        abi_digest = "3prZxsoomKgpMShtkpqfc3gVwAUX3N8UduP884GBLZWc"
+    )
 )]
 #[cfg_attr(
     feature = "serde",

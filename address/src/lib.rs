@@ -22,14 +22,15 @@ use crate::error::ParseAddressError;
 #[cfg(all(feature = "rand", not(any(target_os = "solana", target_arch = "bpf"))))]
 pub use crate::hasher::{AddressHasher, AddressHasherBuilder};
 
+#[cfg(any(feature = "frozen-abi", feature = "dev-context-only-utils"))]
+use arbitrary::Arbitrary;
+
 #[cfg(feature = "alloc")]
 extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
-#[cfg(feature = "dev-context-only-utils")]
-use arbitrary::Arbitrary;
 #[cfg(feature = "bytemuck")]
 use bytemuck_derive::{Pod, Zeroable};
 #[cfg(feature = "decode")]
@@ -80,7 +81,7 @@ pub const PDA_MARKER: &[u8; 21] = b"ProgramDerivedAddress";
 /// [pdas]: https://solana.com/docs/core/cpi#program-derived-addresses
 /// [`Keypair`]: https://docs.rs/solana-sdk/latest/solana_sdk/signer/keypair/struct.Keypair.html
 #[repr(transparent)]
-#[cfg_attr(feature = "frozen-abi", derive(solana_frozen_abi_macro::AbiExample))]
+#[cfg_attr(feature = "frozen-abi", derive(solana_frozen_abi_macro::AbiExample,))]
 #[cfg_attr(
     feature = "borsh",
     derive(BorshSerialize, BorshDeserialize),
@@ -89,7 +90,10 @@ pub const PDA_MARKER: &[u8; 21] = b"ProgramDerivedAddress";
 #[cfg_attr(feature = "borsh", derive(BorshSchema))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[cfg_attr(feature = "bytemuck", derive(Pod, Zeroable))]
-#[cfg_attr(feature = "dev-context-only-utils", derive(Arbitrary))]
+#[cfg_attr(
+    any(feature = "frozen-abi", feature = "dev-context-only-utils"),
+    derive(Arbitrary)
+)]
 #[cfg_attr(not(feature = "decode"), derive(Debug))]
 #[cfg_attr(feature = "copy", derive(Copy))]
 #[derive(Clone, Default, Eq, Ord, PartialEq, PartialOrd)]

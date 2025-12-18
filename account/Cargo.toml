@@ -30,6 +30,7 @@ serde = [
 ]
 
 [dependencies]
+arbitrary = { version = "1", features = ["derive"] }
 bincode = { workspace = true, optional = true }
 qualifier_attr = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }

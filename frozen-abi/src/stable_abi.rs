@@ -1,10 +1,17 @@
-use rand::{distr::StandardUniform, Rng, RngCore};
+use {
+    arbitrary::{Arbitrary, Unstructured},
+    rand::RngCore,
+};
 
 pub trait StableAbi: Sized {
     fn random(rng: &mut impl RngCore) -> Self
     where
-        StandardUniform: rand::distr::Distribution<Self>,
+        Self: for<'a> Arbitrary<'a>,
     {
-        rng.random::<Self>()
+        let mut buffer = vec![0u8; 65536];
+        rng.fill_bytes(&mut buffer);
+
+        let mut unstructured = Unstructured::new(&buffer);
+        Self::arbitrary(&mut unstructured).expect("failed to fill")
     }
 }
