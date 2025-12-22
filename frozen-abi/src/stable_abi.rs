@@ -32,3 +32,85 @@ pub trait StableAbi: Sized {
         Self::arbitrary(&mut unstructured).expect("failed to fill - try increasing MAX_TYPE_SIZE")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use {
+        arbitrary::Arbitrary,
+        frozen_abi_macro::{frozen_abi, AbiEnumVisitor, AbiExample, StableAbi},
+        serde::{Deserialize, Serialize},
+    };
+
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Serialize,
+        Deserialize,
+        AbiExample,
+        AbiEnumVisitor,
+        StableAbi,
+        Arbitrary,
+    )]
+    #[frozen_abi(api_digest = "PLACEHOLDER_API_1", abi_digest = "PLACEHOLDER_ABI_1")]
+    pub struct AStruct {
+        pub a: u64,
+        pub b: i32,
+        pub c: bool,
+        pub d: Option<u32>,
+        pub e: Option<String>,
+        pub f: Vec<u8>,
+        pub g: Vec<u64>,
+        pub h: String,
+    }
+
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Serialize,
+        Deserialize,
+        AbiExample,
+        AbiEnumVisitor,
+        StableAbi,
+        Arbitrary,
+    )]
+    #[frozen_abi(api_digest = "PLACEHOLDER_API_5", abi_digest = "PLACEHOLDER_ABI_5")]
+    pub struct AOuterStruct {
+        pub a: u64,
+        pub b: AStruct,
+        pub c: Vec<AStruct>,
+    }
+
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Serialize,
+        Deserialize,
+        AbiExample,
+        AbiEnumVisitor,
+        StableAbi,
+        Arbitrary,
+    )]
+    #[frozen_abi(api_digest = "PLACEHOLDER_API_6", abi_digest = "PLACEHOLDER_ABI_6")]
+    pub struct ATuple(pub u64, pub String, pub bool);
+
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Serialize,
+        Deserialize,
+        AbiExample,
+        AbiEnumVisitor,
+        StableAbi,
+        Arbitrary,
+    )]
+    #[frozen_abi(api_digest = "PLACEHOLDER_API_7", abi_digest = "PLACEHOLDER_ABI_7")]
+    pub enum Enum {
+        A,
+        B,
+        C,
+    }
+}
