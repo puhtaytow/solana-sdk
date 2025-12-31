@@ -246,7 +246,11 @@ impl<T: ?Sized, U: ?Sized> EvenAsOpaque for SerializeAsWrap<'_, T, U> {
 }
 
 pub(crate) fn normalize_type_name(type_name: &str) -> String {
-    type_name.chars().filter(|c| *c != '&').collect()
+    type_name
+        .chars()
+        .filter(|c| *c != '&')
+        .collect::<String>()
+        .replace("<'_>", "")
 }
 
 type Placeholder = ();
