@@ -1,9 +1,6 @@
 //! Compact serde-encoding of vectors with small length.
-#![cfg_attr(feature = "frozen-abi", feature(min_specialization))]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![allow(clippy::arithmetic_side_effects)]
-#[cfg(feature = "frozen-abi")]
-use solana_frozen_abi_macro::AbiExample;
 use std::convert::TryFrom;
 #[cfg(feature = "serde")]
 use {
@@ -20,7 +17,6 @@ use {
 /// bytes. Each byte follows the same pattern until the 3rd byte. The 3rd
 /// byte may only have the 2 least-significant bits set, otherwise the encoded
 /// value will overflow the u16.
-#[cfg_attr(feature = "frozen-abi", derive(AbiExample))]
 pub struct ShortU16(pub u16);
 
 #[cfg(feature = "serde")]

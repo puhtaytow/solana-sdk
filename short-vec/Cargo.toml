@@ -15,12 +15,10 @@ targets = ["x86_64-unknown-linux-gnu"]
 [features]
 default = ["serde"]
 serde = ["dep:serde_core"]
-frozen-abi = ["dep:solana-frozen-abi", "dep:solana-frozen-abi-macro"]
+frozen-abi = []
 
 [dependencies]
 serde_core = { workspace = true, optional = true }
-solana-frozen-abi = { workspace = true, optional = true, features = ["frozen-abi"] }
-solana-frozen-abi-macro = { workspace = true, optional = true, features = ["frozen-abi"] }
 
 [dev-dependencies]
 assert_matches = { workspace = true }

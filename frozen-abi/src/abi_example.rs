@@ -195,6 +195,7 @@ example_impls! { std::time::Duration, std::time::Duration::from_secs(0) }
 example_impls! { std::sync::Once, std::sync::Once::new() }
 
 example_impls! { bytes::Bytes, bytes::Bytes::new() }
+example_impls! { solana_short_vec::ShortU16, solana_short_vec::ShortU16(0) }
 
 use std::sync::atomic::*;
 
