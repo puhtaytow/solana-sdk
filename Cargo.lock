@@ -5469,6 +5469,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "wincode-stable-abi-example"
+version = "0.1.0"
+dependencies = [
+ "bincode",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "solana-frozen-abi",
+ "solana-frozen-abi-macro",
+ "wincode",
+]
+
+[[package]]
 name = "windows-link"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

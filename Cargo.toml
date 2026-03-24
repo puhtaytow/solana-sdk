@@ -105,6 +105,7 @@ members = [
     "transaction-error",
     "validator-exit",
     "vote-interface",
+    "wincode-stable-abi-example",
     "zero-copy",
 ]
 
