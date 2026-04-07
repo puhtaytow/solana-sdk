@@ -1,0 +1,32 @@
+[package]
+name = "wincode-stable-abi-example"
+description = "Example crate demonstrating wincode + frozen-abi StableAbi"
+version = "0.1.0"
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+all-features = true
+rustdoc-args = ["--cfg=docsrs"]
+
+[features]
+default = []
+frozen-abi = ["solana-frozen-abi/frozen-abi", "solana-frozen-abi-macro/frozen-abi"]
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_derive = { workspace = true }
+solana-frozen-abi = { workspace = true }
+solana-frozen-abi-macro = { workspace = true }
+wincode = { workspace = true, features = ["alloc", "derive"] }
+
+[dev-dependencies]
+bincode = "1.3.3"
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

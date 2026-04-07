@@ -106,6 +106,7 @@ members = [
     "validator-exit",
     "vote-interface",
     "wincode-varint",
+    "wincode-stable-abi-example",
     "zero-copy",
 ]
 
