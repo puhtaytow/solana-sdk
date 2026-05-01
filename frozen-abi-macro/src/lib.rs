@@ -353,7 +353,7 @@ fn quote_for_test(
             quote! { ::solana_frozen_abi::bincode::serialize(&val).unwrap() }
         }
         AbiSerializer::Wincode => {
-            quote! { ::solana_frozen_abi::wincode::serialize(&val).unwrap() }
+            quote! { ::wincode::serialize(&val).unwrap() }
         }
     };
 

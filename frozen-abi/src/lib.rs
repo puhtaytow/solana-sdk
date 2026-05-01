@@ -99,4 +99,4 @@ pub mod stable_abi;
 extern crate solana_frozen_abi_macro;
 
 #[cfg(all(feature = "frozen-abi", not(target_os = "solana")))]
-pub use {bincode, rand, rand_chacha, wincode};
+pub use {bincode, rand, rand_chacha};
