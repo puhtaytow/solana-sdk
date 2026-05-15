@@ -83,7 +83,7 @@ use quote::{quote, ToTokens};
 #[cfg(feature = "frozen-abi")]
 use syn::{
     parse_macro_input, Attribute, Error, Expr, Fields, Ident, Item, ItemEnum, ItemStruct, ItemType,
-    LitStr, Variant,
+    LitStr, Type, Variant,
 };
 
 #[cfg(feature = "frozen-abi")]
@@ -163,11 +163,20 @@ fn parse_stable_abi_sample_override(field: &syn::Field) -> Result<Option<TokenSt
 }
 
 #[cfg(feature = "frozen-abi")]
-fn stable_abi_sample_field_expr(field: &syn::Field) -> Result<TokenStream2, Error> {
-    Ok(match parse_stable_abi_sample_override(field)? {
-        Some(expr) => expr,
-        None => quote! { rng.random() },
-    })
+fn stable_abi_sample_field(field: &syn::Field) -> Result<TokenStream2, Error> {
+    if let Some(expr) = parse_stable_abi_sample_override(field)? {
+        return Ok(expr);
+    }
+    if let Type::Path(type_path) = &field.ty {
+        if type_path.path.is_ident("usize") {
+            return Ok(quote! {{
+                #[cfg(not(target_pointer_width = "64"))]
+                compile_error!("StableAbiSample only supports usize fields on 64-bit targets");
+                rng.random::<u64>() as usize
+            }});
+        }
+    }
+    Ok(quote! { rng.random() })
 }
 
 #[cfg(feature = "frozen-abi")]
@@ -182,7 +191,7 @@ fn derive_stable_abi_sample_struct_type(input: ItemStruct) -> Result<TokenStream
                 .iter()
                 .map(|field| -> Result<_, Error> {
                     let field_name = &field.ident;
-                    let field_expr = stable_abi_sample_field_expr(field)?;
+                    let field_expr = stable_abi_sample_field(field)?;
                     Ok(quote! {#field_name: #field_expr,})
                 })
                 .collect::<Result<Vec<_>, _>>()?;
@@ -192,7 +201,7 @@ fn derive_stable_abi_sample_struct_type(input: ItemStruct) -> Result<TokenStream
             let fields = unnamed_fields
                 .unnamed
                 .iter()
-                .map(stable_abi_sample_field_expr)
+                .map(stable_abi_sample_field)
                 .collect::<Result<Vec<_>, _>>()?;
             quote! {#type_name #turbofish ( #(#fields),* )}
         }
@@ -230,7 +239,7 @@ fn stable_abi_sample_enum_variant_expr(
                 .iter()
                 .map(|field| -> Result<_, Error> {
                     let field_name = &field.ident;
-                    let field_expr = stable_abi_sample_field_expr(field)?;
+                    let field_expr = stable_abi_sample_field(field)?;
                     Ok(quote! {#field_name: #field_expr,})
                 })
                 .collect::<Result<Vec<_>, _>>()?;
@@ -240,7 +249,7 @@ fn stable_abi_sample_enum_variant_expr(
             let fields = variant_fields
                 .unnamed
                 .iter()
-                .map(stable_abi_sample_field_expr)
+                .map(stable_abi_sample_field)
                 .collect::<Result<Vec<_>, _>>()?;
             Ok(quote! {#type_name #turbofish::#variant_name( #(#fields),* )})
         }

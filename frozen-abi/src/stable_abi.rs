@@ -258,13 +258,13 @@ mod tests {
         "G7kuFGzwY6HwSytv6UsjWVEAbhrfv2n2gmchE27mSRiM";
     #[derive(Debug, wincode::SchemaWrite)]
     #[cfg_attr(
-                feature = "frozen-abi",
-                derive(solana_frozen_abi_macro::StableAbi, solana_frozen_abi_macro::StableAbiSample),
-                solana_frozen_abi_macro::frozen_abi(
-                    abi_digest = ABI_DIGEST_EQUIVALENT_FIELD_STRUCTURES,
-                    abi_serializer = "wincode",
-                )
-            )]
+        feature = "frozen-abi",
+        derive(solana_frozen_abi_macro::StableAbi, solana_frozen_abi_macro::StableAbiSample),
+        solana_frozen_abi_macro::frozen_abi(
+            abi_digest = ABI_DIGEST_EQUIVALENT_FIELD_STRUCTURES,
+            abi_serializer = "wincode",
+        )
+    )]
     struct TestEquivalentWincodeStruct {
         a: u8,
         b: u64,
@@ -273,26 +273,26 @@ mod tests {
 
     #[derive(Debug, serde_derive::Serialize)]
     #[cfg_attr(
-                feature = "frozen-abi",
-                derive(solana_frozen_abi_macro::StableAbi, solana_frozen_abi_macro::StableAbiSample),
-                solana_frozen_abi_macro::frozen_abi(
-                    abi_digest = ABI_DIGEST_EQUIVALENT_FIELD_STRUCTURES,
-                    abi_serializer = "bincode",
-                )
-            )]
+        feature = "frozen-abi",
+        derive(solana_frozen_abi_macro::StableAbi, solana_frozen_abi_macro::StableAbiSample),
+        solana_frozen_abi_macro::frozen_abi(
+            abi_digest = ABI_DIGEST_EQUIVALENT_FIELD_STRUCTURES,
+            abi_serializer = "bincode",
+        )
+    )]
     struct TestEquivalentBincodeTuple(u8, u64, u8, [u8; 3]);
 
     const ABI_DIGEST_EQUIVALENT_BYTE_SEQUENCES: &str =
         "14qLvWX4UebbLBaKi6v31A8xDfXU8ifX8DqCGbpAwjtD";
     #[derive(Debug, wincode::SchemaWrite)]
     #[cfg_attr(
-                feature = "frozen-abi",
-                derive(solana_frozen_abi_macro::StableAbi, solana_frozen_abi_macro::StableAbiSample),
-                solana_frozen_abi_macro::frozen_abi(
-                    abi_digest = ABI_DIGEST_EQUIVALENT_BYTE_SEQUENCES,
-                    abi_serializer = "wincode",
-                )
-            )]
+        feature = "frozen-abi",
+        derive(solana_frozen_abi_macro::StableAbi, solana_frozen_abi_macro::StableAbiSample),
+        solana_frozen_abi_macro::frozen_abi(
+            abi_digest = ABI_DIGEST_EQUIVALENT_BYTE_SEQUENCES,
+            abi_serializer = "wincode",
+        )
+    )]
     struct TestEquivalentCollectionsWincode {
         #[stable_abi_sample(
             with = "(0..rng.random::<u8>() % 4).map(|_| rng.random::<u8>()).collect()"
@@ -303,13 +303,13 @@ mod tests {
 
     #[derive(Debug, serde_derive::Serialize)]
     #[cfg_attr(
-                feature = "frozen-abi",
-                derive(solana_frozen_abi_macro::StableAbi, solana_frozen_abi_macro::StableAbiSample),
-                solana_frozen_abi_macro::frozen_abi(
-                    abi_digest = ABI_DIGEST_EQUIVALENT_BYTE_SEQUENCES,
-                    abi_serializer = "bincode",
-                )
-            )]
+        feature = "frozen-abi",
+        derive(solana_frozen_abi_macro::StableAbi, solana_frozen_abi_macro::StableAbiSample),
+        solana_frozen_abi_macro::frozen_abi(
+            abi_digest = ABI_DIGEST_EQUIVALENT_BYTE_SEQUENCES,
+            abi_serializer = "bincode",
+        )
+    )]
     struct TestEquivalentCollectionsBincode(
         #[stable_abi_sample(
             with = "(0..rng.random::<u8>() % 4).map(|_| rng.random::<u8>()).collect()"
@@ -322,13 +322,13 @@ mod tests {
         "9pGP5GGD2HxDRCQeDv3rPGTfVH9SzkZCXMSGHpZnzz4G";
     #[derive(Debug, wincode::SchemaWrite)]
     #[cfg_attr(
-                feature = "frozen-abi",
-                derive(solana_frozen_abi_macro::StableAbi, solana_frozen_abi_macro::StableAbiSample),
-                solana_frozen_abi_macro::frozen_abi(
-                    abi_digest = ABI_DIGEST_EQUIVALENT_KEY_VALUE_SEQUENCES,
-                    abi_serializer = "wincode",
-                )
-            )]
+        feature = "frozen-abi",
+        derive(solana_frozen_abi_macro::StableAbi, solana_frozen_abi_macro::StableAbiSample),
+        solana_frozen_abi_macro::frozen_abi(
+            abi_digest = ABI_DIGEST_EQUIVALENT_KEY_VALUE_SEQUENCES,
+            abi_serializer = "wincode",
+        )
+    )]
     struct TestEquivalentBTreeMapVsVecWincode {
         #[stable_abi_sample(
             with = "(0..rng.random::<u16>() % 4).map(|i| (((i << 8) + rng.random::<u8>() as u16), rng.random())).collect()"
@@ -339,18 +339,34 @@ mod tests {
 
     #[derive(Debug, serde_derive::Serialize)]
     #[cfg_attr(
-                feature = "frozen-abi",
-                derive(solana_frozen_abi_macro::StableAbi, solana_frozen_abi_macro::StableAbiSample),
-                solana_frozen_abi_macro::frozen_abi(
-                    abi_digest = ABI_DIGEST_EQUIVALENT_KEY_VALUE_SEQUENCES,
-                    abi_serializer = "bincode",
-                )
-            )]
+        feature = "frozen-abi",
+        derive(solana_frozen_abi_macro::StableAbi, solana_frozen_abi_macro::StableAbiSample),
+        solana_frozen_abi_macro::frozen_abi(
+            abi_digest = ABI_DIGEST_EQUIVALENT_KEY_VALUE_SEQUENCES,
+            abi_serializer = "bincode",
+        )
+    )]
     struct TestEquivalentBTreeMapVsVecBincode {
         #[stable_abi_sample(
             with = "(0..rng.random::<u16>() % 4).map(|i| (((i << 8) + rng.random::<u8>() as u16), rng.random())).collect()"
         )]
         a: Vec<(u16, u8)>,
         b: bool,
+    }
+
+    #[derive(Debug, wincode::SchemaWrite)]
+    #[cfg_attr(
+        feature = "frozen-abi",
+        derive(
+            solana_frozen_abi_macro::StableAbi,
+            solana_frozen_abi_macro::StableAbiSample
+        ),
+        solana_frozen_abi_macro::frozen_abi(
+            abi_digest = "HXz8236KK4xi9WaHQxPpGyrsp3AjdBaCWMQiwVhcKv83",
+            abi_serializer = "wincode",
+        )
+    )]
+    struct TestPlatformDependentUsize {
+        a: usize,
     }
 }
