@@ -33,26 +33,17 @@ pub fn derive_stable_abi(_item: TokenStream) -> TokenStream {
 #[proc_macro_derive(StableAbi)]
 pub fn derive_stable_abi(item: TokenStream) -> TokenStream {
     let item = parse_macro_input!(item as Item);
-    let (ident, generics) = match &item {
-        Item::Struct(s) => (&s.ident, &s.generics),
-        Item::Enum(e) => (&e.ident, &e.generics),
-        Item::Type(t) => (&t.ident, &t.generics),
+    match &item {
+        Item::Struct(_) | Item::Enum(_) | Item::Type(_) => TokenStream::new(),
         _ => {
-            return Error::new_spanned(
+            Error::new_spanned(
                 item,
                 "StableAbi can only be derived for struct, enum, or type alias",
             )
             .to_compile_error()
-            .into();
+            .into()
         }
-    };
-    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
-
-    let expanded = quote! {
-        #[automatically_derived]
-        impl #impl_generics ::solana_frozen_abi::stable_abi::StableAbi for #ident #ty_generics #where_clause {}
-    };
-    expanded.into()
+    }
 }
 
 #[cfg(not(feature = "frozen-abi"))]
@@ -529,15 +520,14 @@ fn quote_for_test(
         quote! {
             #[test]
             fn test_abi_digest() {
-                use ::solana_frozen_abi::rand::{SeedableRng, RngCore};
+                use ::solana_frozen_abi::rand::{Rng, SeedableRng};
                 use ::solana_frozen_abi::rand_chacha::ChaCha8Rng;
-                use ::solana_frozen_abi::stable_abi::StableAbi;
 
                 let mut rng = ChaCha8Rng::seed_from_u64(20666175621446498);
                 let mut digester = ::solana_frozen_abi::hash::Hasher::default();
 
                 for _ in 0..10_000 {
-                    let val = <#type_name>::random(&mut rng);
+                    let val = rng.random::<#type_name>();
                     digester.hash(&#abi_serialize_expr);
                 }
                 assert_eq!(#expected_abi_digest, ::std::format!("{}", digester.result()), "ABI layout has changed!");

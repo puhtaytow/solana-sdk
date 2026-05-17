@@ -14,7 +14,7 @@
 //!
 //! The macro would generate the `test_abi_digest` test that verifies binary layout stability:
 //! - Initializes a deterministic random number generator with fixed seed
-//! - Generates 10_000 instances of the type via `StableAbi::random()`
+//! - Generates 10_000 instances of the type via `rng.random::<MyType>()`
 //! - Serializes each instance
 //! - Hashes all serialized bytes together
 //! - Compares the resulting hash against the provided in `abi_digest` attribute
@@ -26,14 +26,9 @@
 //!
 //! ## Adding StableAbi to a New Type
 //!
-//! Deriving `StableAbi` adds:
-//!
-//! ```rust,ignore
-//! impl ::solana_frozen_abi::stable_abi::StableAbi for MyType {}
-//! ```
-//!
-//! The `StableAbi::random()` default implementation calls `rng.random::<MyType>()`, so your type
-//! also needs `Distribution<MyType> for StandardUniform`.
+//! Types that derive `StableAbi` and opt into `#[frozen_abi(...)]` still need
+//! `Distribution<MyType> for StandardUniform`, because the ABI test generates
+//! samples with `rng.random::<MyType>()`.
 //!
 //! There are two ways to provide it:
 //!
