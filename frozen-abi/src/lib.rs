@@ -113,7 +113,10 @@
 
 #![allow(incomplete_features)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
-#![cfg_attr(feature = "frozen-abi", feature(specialization))]
+#![cfg_attr(
+    feature = "frozen-abi",
+    feature(auto_traits, negative_impls, specialization)
+)]
 // Activate some of the Rust 2024 lints to make the future migration easier.
 #![warn(if_let_rescope)]
 #![warn(keyword_idents_2024)]

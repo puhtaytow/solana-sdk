@@ -9,6 +9,44 @@ pub trait StableAbi: Sized {
     }
 }
 
+// covers every type that are supported by rand directly
+pub auto trait SampleWithStandardUniform {}
+
+pub trait StableAbiSampleField: Sized {
+    fn sample_for_stable_abi<R: Rng + ?Sized>(rng: &mut R) -> Self;
+}
+
+impl<T> StableAbiSampleField for T
+where
+    T: SampleWithStandardUniform,
+    StandardUniform: rand::distr::Distribution<T>,
+{
+    fn sample_for_stable_abi<R: Rng + ?Sized>(rng: &mut R) -> Self {
+        rng.random()
+    }
+}
+
+pub fn sample_value<T, R>(rng: &mut R) -> T
+where
+    T: StableAbiSampleField,
+    R: Rng + ?Sized,
+{
+    T::sample_for_stable_abi(rng)
+}
+
+// exclude usize from the blanket as it has dedicated impl
+impl !SampleWithStandardUniform for usize {}
+
+#[cfg(not(target_pointer_width = "64"))]
+compile_error!("StableAbiSample only supports usize fields on 64-bit targets");
+
+#[cfg(target_pointer_width = "64")]
+impl StableAbiSampleField for usize {
+    fn sample_for_stable_abi<R: Rng + ?Sized>(rng: &mut R) -> usize {
+        rng.random::<u64>() as usize
+    }
+}
+
 #[cfg(all(test, feature = "frozen-abi"))]
 mod tests {
     use std::collections::{BTreeMap, VecDeque};
@@ -354,6 +392,8 @@ mod tests {
         b: bool,
     }
 
+    type WrappedUsize = usize;
+
     #[derive(Debug, wincode::SchemaWrite)]
     #[cfg_attr(
         feature = "frozen-abi",
@@ -362,11 +402,12 @@ mod tests {
             solana_frozen_abi_macro::StableAbiSample
         ),
         solana_frozen_abi_macro::frozen_abi(
-            abi_digest = "HXz8236KK4xi9WaHQxPpGyrsp3AjdBaCWMQiwVhcKv83",
+            abi_digest = "YX37P5LxtYQZJFj21yiKfYPoopxQKAmh13rx5p9GvBM",
             abi_serializer = "wincode",
         )
     )]
     struct TestPlatformDependentUsize {
         a: usize,
+        b: WrappedUsize,
     }
 }
