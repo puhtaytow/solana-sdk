@@ -6,8 +6,6 @@ use super::{MAX_EPOCH_CREDITS_HISTORY, MAX_LOCKOUT_HISTORY};
 use arbitrary::Arbitrary;
 #[cfg(feature = "serde")]
 use serde_derive::{Deserialize, Serialize};
-#[cfg(feature = "frozen-abi")]
-use solana_frozen_abi_macro::{frozen_abi, AbiExample};
 #[cfg(any(target_os = "solana", feature = "bincode"))]
 use solana_instruction_error::InstructionError;
 use {
@@ -18,11 +16,19 @@ use {
     solana_rent::Rent,
     std::{collections::VecDeque, fmt::Debug},
 };
+#[cfg(feature = "frozen-abi")]
+use {
+    crate::state::MAX_ITEMS,
+    solana_frozen_abi_macro::{frozen_abi, AbiExample, StableAbi, StableAbiSample},
+};
 
 #[cfg_attr(
     feature = "frozen-abi",
-    frozen_abi(digest = "pZqasQc6duzMYzpzU7eriHH9cMXmubuUP4NmCrkWZjt"),
-    derive(AbiExample)
+    frozen_abi(
+        api_digest = "pZqasQc6duzMYzpzU7eriHH9cMXmubuUP4NmCrkWZjt",
+        abi_digest = "5FeHfkdRETaLC5C3KFe9nc1KHiZQERyq9t6qL6PzYbEC"
+    ),
+    derive(AbiExample, StableAbi, StableAbiSample)
 )]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
@@ -49,6 +55,12 @@ pub struct VoteStateV3 {
     /// history of prior authorized voters and the epochs for which
     /// they were set, the bottom end of the range is inclusive,
     /// the top of the range is exclusive
+    #[cfg_attr(
+        feature = "frozen-abi",
+        stable_abi_sample(
+            with = "CircBuf { buf: rng.random(), idx: usize::from(rng.random::<u8>()) % MAX_ITEMS, is_empty: rng.random() }"
+        )
+    )]
     pub prior_voters: CircBuf<(Pubkey, Epoch, Epoch)>,
 
     /// history of how many credits earned by the end of each epoch

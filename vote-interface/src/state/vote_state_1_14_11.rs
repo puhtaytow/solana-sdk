@@ -1,14 +1,19 @@
 use super::*;
 #[cfg(feature = "dev-context-only-utils")]
 use arbitrary::Arbitrary;
+#[cfg(feature = "frozen-abi")]
+use solana_frozen_abi_macro::{frozen_abi, AbiExample, StableAbi, StableAbiSample};
 
 // Offset used for VoteState version 1_14_11
 const DEFAULT_PRIOR_VOTERS_OFFSET: usize = 82;
 
 #[cfg_attr(
     feature = "frozen-abi",
-    solana_frozen_abi_macro::frozen_abi(digest = "2rjXSWaNeAdoUNJDC5otC7NPR1qXHvLMuAs5faE4DPEt"),
-    derive(solana_frozen_abi_macro::AbiExample)
+    frozen_abi(
+        api_digest = "2rjXSWaNeAdoUNJDC5otC7NPR1qXHvLMuAs5faE4DPEt",
+        abi_digest = "2iAYrY7cNamfkXo7y93NKFM83zY87AdgTwYMgewAvCU2"
+    ),
+    derive(AbiExample, StableAbi, StableAbiSample)
 )]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
@@ -35,6 +40,12 @@ pub struct VoteState1_14_11 {
     /// history of prior authorized voters and the epochs for which
     /// they were set, the bottom end of the range is inclusive,
     /// the top of the range is exclusive
+    #[cfg_attr(
+        feature = "frozen-abi",
+        stable_abi_sample(
+            with = "CircBuf { buf: rng.random(), idx: usize::from(rng.random::<u8>()) % MAX_ITEMS, is_empty: rng.random() }"
+        )
+    )]
     pub prior_voters: CircBuf<(Pubkey, Epoch, Epoch)>,
 
     /// history of how many credits earned by the end of each epoch
