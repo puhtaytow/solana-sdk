@@ -170,6 +170,7 @@ fn parse_abi_serializers(expr: &Expr) -> Result<Vec<AbiSerializer>, Error> {
 }
 
 #[cfg(feature = "frozen-abi")]
+#[derive(Clone, Copy)]
 enum RoundtripTest {
     No,
     WireOnly,
@@ -186,6 +187,23 @@ fn parse_roundtrip_test(value: Option<&LitStr>) -> Result<RoundtripTest, Error> 
             "eq_and_wire" => Ok(RoundtripTest::EqAndWire),
             _ => Err(Error::new_spanned(value, "unsupported `test_roundtrip` value; expected \"no\", \"wire_only\", or \"eq_and_wire\"")),
         },
+    }
+}
+
+#[cfg(feature = "frozen-abi")]
+fn validate_frozen_abi_required_digest(
+    item: TokenStream2,
+    expected_api_digest: Option<&Expr>,
+    expected_abi_digest: Option<&Expr>,
+    _test_corpus: Option<&Expr>,
+) -> Result<(), Error> {
+    if expected_api_digest.is_none() && expected_abi_digest.is_none() {
+        Err(Error::new_spanned(
+            item,
+            "missing required attribute: #[frozen_abi(api_digest = \"...\" or abi_digest = \"...\")]",
+        ))
+    } else {
+        Ok(())
     }
 }
 
@@ -631,6 +649,7 @@ fn quote_for_test(
     type_name: &Ident,
     expected_api_digest: Option<&Expr>,
     expected_abi_digest: Option<&Expr>,
+    test_corpus: Option<&Expr>,
     abi_serializers: &[AbiSerializer],
     roundtrip_test: RoundtripTest,
 ) -> TokenStream2 {
@@ -667,6 +686,47 @@ fn quote_for_test(
         TokenStream2::new()
     };
 
+    let quote_roundtrip_test = |abi_serialize_expr: &TokenStream2| match roundtrip_test {
+        RoundtripTest::No => TokenStream2::new(),
+        RoundtripTest::WireOnly | RoundtripTest::EqAndWire => {
+            let test_roundtrip_eq = match roundtrip_test {
+                RoundtripTest::EqAndWire => quote! {
+                    assert!(
+                        val == roundtrip_val,
+                        "deserializing serialized {} should preserve value",
+                        roundtrip_type_name
+                    );
+                },
+                _ => TokenStream2::new(),
+            };
+            quote! {
+                let roundtrip_type_name = ::std::any::type_name::<#type_name>();
+                let roundtrip_val: #type_name =
+                    #abi_serialize_expr::deserialize::<#type_name>(&bytes).expect(
+                        ::std::concat!(
+                            "must deserialize serialized ",
+                            ::std::stringify!(#type_name)
+                        )
+                    );
+
+                #test_roundtrip_eq
+
+                let roundtrip_bytes = #abi_serialize_expr::serialize(&roundtrip_val).expect(
+                    ::std::concat!(
+                        "must re-serialize ",
+                        ::std::stringify!(#type_name)
+                    )
+                );
+                assert_eq!(
+                    bytes,
+                    roundtrip_bytes,
+                    "re-serializing deserialized {} should match bytes",
+                    roundtrip_type_name
+                );
+            }
+        }
+    };
+
     // Both serializers share the same expected digest, so generate a separate
     // test per serializer (named with the serializer) that each check against
     // it; the tests run in sequence without cross-checking each other.
@@ -677,46 +737,7 @@ fn quote_for_test(
                 Span::call_site(),
             );
             let abi_serialize_expr = abi_serializer.serialize_expr();
-            let test_roundtrip = match roundtrip_test {
-                RoundtripTest::No => TokenStream2::new(),
-                RoundtripTest::WireOnly | RoundtripTest::EqAndWire => {
-                    let test_roundtrip_eq = match roundtrip_test {
-                        RoundtripTest::EqAndWire => quote! {
-                            assert!(
-                                val == roundtrip_val,
-                                "deserializing serialized {} should preserve value",
-                                roundtrip_type_name
-                            );
-                        },
-                        _ => TokenStream2::new(),
-                    };
-                    quote! {
-                        let roundtrip_type_name = ::std::any::type_name::<#type_name>();
-                        let roundtrip_val: #type_name =
-                            #abi_serialize_expr::deserialize::<#type_name>(&bytes).expect(
-                                ::std::concat!(
-                                    "must deserialize serialized ",
-                                    ::std::stringify!(#type_name)
-                                )
-                            );
-
-                        #test_roundtrip_eq
-
-                        let roundtrip_bytes = #abi_serialize_expr::serialize(&roundtrip_val).expect(
-                            ::std::concat!(
-                                "must re-serialize ",
-                                ::std::stringify!(#type_name)
-                            )
-                        );
-                        assert_eq!(
-                            bytes,
-                            roundtrip_bytes,
-                            "re-serializing deserialized {} should match bytes",
-                            roundtrip_type_name
-                        );
-                    }
-                }
-            };
+            let test_roundtrip = quote_roundtrip_test(&abi_serialize_expr);
             quote! {
                 #[test]
                 fn #test_fn_name() {
@@ -745,12 +766,38 @@ fn quote_for_test(
         TokenStream2::new()
     };
 
+    let test_corpus = if let Some(test_corpus) = test_corpus {
+        let corpus_tests = abi_serializers.iter().map(|abi_serializer| {
+            let test_fn_name = Ident::new(
+                &format!("test_corpus_{}", abi_serializer.name()),
+                Span::call_site(),
+            );
+            let abi_serialize_expr = abi_serializer.serialize_expr();
+            let test_roundtrip = quote_roundtrip_test(&abi_serialize_expr);
+            quote! {
+                #[test]
+                fn #test_fn_name() {
+                    for val in <#type_name as ::solana_frozen_abi::test_corpus::TestCorpus<_>>::corpus_with_context(#test_corpus) {
+                        let bytes = #abi_serialize_expr::serialize(&val)
+                            .expect("must serialize");
+
+                        #test_roundtrip
+                    }
+                }
+            }
+        });
+        quote! { #(#corpus_tests)* }
+    } else {
+        TokenStream2::new()
+    };
+
     quote! {
         #[cfg(test)]
         mod #test_mod_ident {
             use super::*;
             #test_api
             #test_abi
+            #test_corpus
         }
     }
 }
@@ -765,6 +812,7 @@ fn frozen_abi_type_alias(
     input: ItemType,
     expected_api_digest: Option<&Expr>,
     expected_abi_digest: Option<&Expr>,
+    test_corpus: Option<&Expr>,
     abi_serializers: &[AbiSerializer],
     roundtrip_test: RoundtripTest,
 ) -> TokenStream {
@@ -774,6 +822,7 @@ fn frozen_abi_type_alias(
         type_name,
         expected_api_digest,
         expected_abi_digest,
+        test_corpus,
         abi_serializers,
         roundtrip_test,
     );
@@ -789,6 +838,7 @@ fn frozen_abi_struct_type(
     input: ItemStruct,
     expected_api_digest: Option<&Expr>,
     expected_abi_digest: Option<&Expr>,
+    test_corpus: Option<&Expr>,
     abi_serializers: &[AbiSerializer],
     roundtrip_test: RoundtripTest,
 ) -> TokenStream {
@@ -798,6 +848,7 @@ fn frozen_abi_struct_type(
         type_name,
         expected_api_digest,
         expected_abi_digest,
+        test_corpus,
         abi_serializers,
         roundtrip_test,
     );
@@ -859,6 +910,7 @@ fn frozen_abi_enum_type(
     input: ItemEnum,
     expected_api_digest: Option<&Expr>,
     expected_abi_digest: Option<&Expr>,
+    test_corpus: Option<&Expr>,
     abi_serializers: &[AbiSerializer],
     roundtrip_test: RoundtripTest,
 ) -> TokenStream {
@@ -868,6 +920,7 @@ fn frozen_abi_enum_type(
         type_name,
         expected_api_digest,
         expected_abi_digest,
+        test_corpus,
         abi_serializers,
         roundtrip_test,
     );
@@ -883,6 +936,7 @@ fn frozen_abi_enum_type(
 pub fn frozen_abi(attrs: TokenStream, item: TokenStream) -> TokenStream {
     let mut api_expected_digest: Option<Expr> = None;
     let mut abi_expected_digest: Option<Expr> = None;
+    let mut test_corpus: Option<Expr> = None;
     let mut abi_serializers = vec![AbiSerializer::Bincode];
     let mut test_roundtrip: Option<LitStr> = None;
 
@@ -892,6 +946,9 @@ pub fn frozen_abi(attrs: TokenStream, item: TokenStream) -> TokenStream {
             Ok(())
         } else if meta.path.is_ident("abi_digest") {
             abi_expected_digest = Some(meta.value()?.parse::<Expr>()?);
+            Ok(())
+        } else if meta.path.is_ident("test_corpus") {
+            test_corpus = Some(meta.value()?.parse::<Expr>()?);
             Ok(())
         } else if meta.path.is_ident("abi_serializer") {
             abi_serializers = parse_abi_serializers(&meta.value()?.parse::<Expr>()?)?;
@@ -905,13 +962,13 @@ pub fn frozen_abi(attrs: TokenStream, item: TokenStream) -> TokenStream {
     });
     parse_macro_input!(attrs with attrs_parser);
 
-    if api_expected_digest.is_none() && abi_expected_digest.is_none() {
-        return Error::new_spanned(
-            TokenStream2::from(item),
-            "missing required attribute: #[frozen_abi(api_digest = \"...\" or abi_digest = \"...\")]",
-        )
-        .to_compile_error()
-        .into();
+    if let Err(error) = validate_frozen_abi_required_digest(
+        TokenStream2::from(item.clone()),
+        api_expected_digest.as_ref(),
+        abi_expected_digest.as_ref(),
+        test_corpus.as_ref(),
+    ) {
+        return error.to_compile_error().into();
     }
 
     let roundtrip_test = match parse_roundtrip_test(test_roundtrip.as_ref()) {
@@ -925,6 +982,7 @@ pub fn frozen_abi(attrs: TokenStream, item: TokenStream) -> TokenStream {
             input,
             api_expected_digest.as_ref(),
             abi_expected_digest.as_ref(),
+            test_corpus.as_ref(),
             &abi_serializers,
             roundtrip_test,
         ),
@@ -932,6 +990,7 @@ pub fn frozen_abi(attrs: TokenStream, item: TokenStream) -> TokenStream {
             input,
             api_expected_digest.as_ref(),
             abi_expected_digest.as_ref(),
+            test_corpus.as_ref(),
             &abi_serializers,
             roundtrip_test,
         ),
@@ -939,6 +998,7 @@ pub fn frozen_abi(attrs: TokenStream, item: TokenStream) -> TokenStream {
             input,
             api_expected_digest.as_ref(),
             abi_expected_digest.as_ref(),
+            test_corpus.as_ref(),
             &abi_serializers,
             roundtrip_test,
         ),
@@ -1017,5 +1077,20 @@ mod parse_abi_serializers_tests {
         let grouped: Expr = syn::parse2(group.to_token_stream()).unwrap();
         assert!(matches!(grouped, Expr::Group(_)), "expected a grouped expr");
         assert_eq!(parse_abi_serializers(&grouped).unwrap(), vec![Wincode]);
+    }
+
+    #[test]
+    fn test_corpus_does_not_satisfy_required_digest() {
+        let test_corpus = expr("[1]");
+        let err = validate_frozen_abi_required_digest(
+            quote::quote! { struct TestCorpusOnly; },
+            None,
+            None,
+            Some(&test_corpus),
+        )
+        .unwrap_err()
+        .to_string();
+
+        assert!(err.contains("missing required attribute"));
     }
 }

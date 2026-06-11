@@ -210,6 +210,8 @@ pub mod hash;
 
 #[cfg(all(feature = "frozen-abi", not(target_os = "solana")))]
 pub mod stable_abi;
+#[cfg(all(feature = "frozen-abi", not(target_os = "solana")))]
+pub mod test_corpus;
 
 #[cfg(feature = "frozen-abi")]
 #[macro_use]
